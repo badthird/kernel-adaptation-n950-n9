@@ -2,6 +2,14 @@
 # kbuild file for usr/ - including initramfs image
 #
 
+# This following pulls the svn version of the rootfs seed into a file included into the FS itself.
+ifneq ($(wildcard ./ubifs/.svn),)
+  SVNREV := $(shell svnversion -n ./ubifs)
+else
+  SVNREV := "N/A"
+endif
+SVNINFO := "ROOTFS created by $(USER)@$(shell hostname) on $(shell date) (svn rev. $(SVNREV))"
+
 klibcdirs:;
 PHONY += klibcdirs
 
@@ -56,6 +64,7 @@ $(deps_initramfs): klibcdirs
 # 3) If gen_init_cpio are newer than initramfs_data.cpio
 # 4) arguments to gen_initramfs.sh changes
 $(obj)/initramfs_data.cpio$(suffix_y): $(obj)/gen_init_cpio $(deps_initramfs) klibcdirs
+	@echo $(SVNINFO) > ./usr/rootfs-info
 	$(Q)$(initramfs) -l $(ramfs-input) > $(obj)/.initramfs_data.cpio.d
 	$(call if_changed,initfs)
 

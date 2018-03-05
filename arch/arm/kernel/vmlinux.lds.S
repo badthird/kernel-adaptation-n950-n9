@@ -59,10 +59,11 @@ SECTIONS
 			*(.security_initcall.init)
 		__security_initcall_end = .;
 #ifdef CONFIG_BLK_DEV_INITRD
-		. = ALIGN(32);
+/* initramfs moved to end of the kernel */
+/*		. = ALIGN(32);
 		__initramfs_start = .;
 			usr/built-in.o(.init.ramfs)
-		__initramfs_end = .;
+		__initramfs_end = .; */
 #endif
 		. = ALIGN(PAGE_SIZE);
 		__per_cpu_load = .;
@@ -197,6 +198,17 @@ SECTIONS
 
 		_edata = .;
 	}
+
+/* initramfs moved here, to the end of the kernel */
+#ifdef CONFIG_BLK_DEV_INITRD
+        .initramfs : {
+		. = ALIGN(32);
+		__initramfs_start = .;
+			usr/built-in.o(.init.ramfs)
+		__initramfs_end = .;
+        }
+#endif
+
 	_edata_loc = __data_loc + SIZEOF(.data);
 
 #ifdef CONFIG_HAVE_TCM

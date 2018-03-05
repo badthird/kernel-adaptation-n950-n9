@@ -126,6 +126,8 @@ static const char *machine_name;
 static char __initdata command_line[COMMAND_LINE_SIZE];
 
 static char default_command_line[COMMAND_LINE_SIZE] __initdata = CONFIG_CMDLINE;
+static char overriden_command_line[COMMAND_LINE_SIZE];
+char *original_command_line;
 static union { char c[4]; unsigned long l; } endian_test __initdata = { { 'l', '?', '?', 'b' } };
 #define ENDIANNESS ((char)endian_test.l)
 
@@ -632,11 +634,24 @@ static int __init parse_tag_revision(const struct tag *tag)
 
 __tagtable(ATAG_REVISION, parse_tag_revision);
 
+#ifdef CONFIG_CMDLINE_OVERRIDE
+static inline int __init parse_tag_cmdline(const struct tag *tag)
+{
+	printk("Overriding kernel command line\n");
+	strlcpy(overriden_command_line, tag->u.cmdline.cmdline, COMMAND_LINE_SIZE);
+	overriden_command_line[COMMAND_LINE_SIZE-1] = '\0';
+	printk("Original command line: %s\n", tag->u.cmdline.cmdline);
+	original_command_line = (char *)overriden_command_line;
+	return 0;
+}
+#else
 static int __init parse_tag_cmdline(const struct tag *tag)
 {
+	printk("Using the given kernel command line\n");
 	strlcpy(default_command_line, tag->u.cmdline.cmdline, COMMAND_LINE_SIZE);
 	return 0;
 }
+#endif
 
 __tagtable(ATAG_CMDLINE, parse_tag_cmdline);
 
